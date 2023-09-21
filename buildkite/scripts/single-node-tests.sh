@@ -9,20 +9,31 @@ fi
 
 path=$1
 
-eval "$(opam config env)"
-export PATH="/home/opam/.cargo/bin:/usr/lib/go/bin:$PATH"
-export GO=/usr/lib/go/bin/go
+# Don't prompt for answers during apt-get install
+export DEBIAN_FRONTEND=noninteractive
 
-# TODO: Stop building lib_p2p multiple times by pulling from buildkite-agent artifacts or docker or somewhere
-echo "--- Build libp2p_helper TODO: use the previously uploaded build artifact"
-make -C src/app/libp2p_helper
+sudo apt-get update
+sudo apt-get install -y git apt-transport-https ca-certificates tzdata curl
 
-export MINA_LIBP2P_PASS="naughty blue worm"
-export MINA_PRIVKEY_PASS="naughty blue worm"
+case "$BUILDKITE_PULL_REQUEST_BASE_BRANCH" in
+  rampup|berkeley|release/2.0.0|develop)
+    TESTNET_NAME="berkeley"
+  ;;
+  *)
+    TESTNET_NAME="mainnet"
+esac
 
-echo "--- Make build"
-export LIBP2P_NIXLESS=1 PATH=/usr/lib/go/bin:$PATH GO=/usr/lib/go/bin/go
-time make build
+git config --global --add safe.directory /workdir
+
+source buildkite/scripts/export-git-env-vars.sh
+
+echo "Installing mina daemon package: mina-${TESTNET_NAME}=${MINA_DEB_VERSION}"
+echo "deb [trusted=yes] http://packages.o1test.net $MINA_DEB_CODENAME $MINA_DEB_RELEASE" | sudo tee /etc/apt/sources.list.d/mina.list
+sudo apt-get update
+sudo apt-get install --allow-downgrades -y "mina-${TESTNET_NAME}=${MINA_DEB_VERSION}"
+
+mkdir -p _build/default/src/app/cli/src
+sudo cp /usr/local/bin/mina _build/default/src/app/cli/src/mina.exe
 
 echo "--- Run tests"
 dune exec "${path}" -- -v 
