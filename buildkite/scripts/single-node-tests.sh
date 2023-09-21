@@ -9,6 +9,8 @@ fi
 
 path=$1
 
+eval "$(opam config env)"
+
 # Don't prompt for answers during apt-get install
 export DEBIAN_FRONTEND=noninteractive
 
