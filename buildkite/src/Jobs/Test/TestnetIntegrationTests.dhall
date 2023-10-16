@@ -34,7 +34,7 @@ in Pipeline.build Pipeline.Config::{
     TestExecutive.execute "gossip-consis" dependsOn,
     TestExecutive.execute "block-prod-prio" dependsOn,
     TestExecutive.execute "medium-bootstrap" dependsOn,
-    TestExecutive.execute "archive-node" dependsOn
-
+    TestExecutive.execute "archive-node" dependsOn,
+    TestExecutive.execute "ledger-export" dependsOn
   ]
 }
