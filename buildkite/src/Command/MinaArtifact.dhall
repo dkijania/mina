@@ -128,9 +128,12 @@ let pipeline : DebianVersions.DebVersion -> Profiles.Type ->  PipelineMode.Type 
 
         in
 
-        DockerImage.generateStep zkappTestTxnSpec
+        DockerImage.generateStep zkappTestTxnSpec,
+
+        Cmd.run "cp _build/default/src/test/command_line_tests/command_line_tests.exe . && buildkite/scripts/buildkite-artifact-helper.sh command_line_tests.exe -upload"
 
       ]
+
     }
 
 in

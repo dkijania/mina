@@ -2,13 +2,6 @@
 
 set -eo pipefail
 
-if [[ $# -ne 1 ]]; then
-    echo "Usage: $0  <path-to-source-tests>"
-    exit 1
-fi
-
-path=$1
-
 # Don't prompt for answers during apt-get install
 export DEBIAN_FRONTEND=noninteractive
 
@@ -36,4 +29,4 @@ mkdir -p _build/default/src/app/cli/src
 sudo cp /usr/local/bin/mina _build/default/src/app/cli/src/mina.exe
 
 echo "--- Run tests"
-dune exec "${path}" -- -v 
+./command_line_tests.exe

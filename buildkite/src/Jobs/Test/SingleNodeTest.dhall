@@ -35,7 +35,7 @@ let buildTestCmd : Text -> Text -> Size -> Command.Type = \(profile : Text) -> \
   let key = "single-node-tests-${profile}" in
   Command.build
     Command.Config::{
-      commands = RunInToolchain.runInToolchain ["DUNE_INSTRUMENT_WITH=bisect_ppx", "COVERALLS_TOKEN"] "buildkite/scripts/single-node-tests.sh ${path} && buildkite/scripts/upload-partial-coverage-data.sh ${key} dev",
+      commands = RunInToolchain.runInToolchain ["DUNE_INSTRUMENT_WITH=bisect_ppx", "COVERALLS_TOKEN"] "artifact-cache-helper.sh command_line_tests.exe && chmod +x command_line_tests.exe && buildkite/scripts/single-node-tests.sh && buildkite/scripts/upload-partial-coverage-data.sh ${key}",
       label = "${profile} single-node-tests",
       key = key,
       target = cmd_target,
@@ -65,6 +65,6 @@ Pipeline.build
         tags = [ PipelineTag.Type.Long, PipelineTag.Type.Test ]
       },
     steps = [
-      buildTestCmd "dev" "src/test/command_line_tests/command_line_tests.exe" Size.XLarge
+      buildTestCmd Size.XLarge
     ]
   }
