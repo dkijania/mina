@@ -30,13 +30,13 @@ let DebianVersions = ../../Constants/DebianVersions.dhall
 let Docker = ../../Command/Docker/Type.dhall
 let Size = ../../Command/Size.dhall
 
-let buildTestCmd : Text -> Text -> Size -> Command.Type = \(profile : Text) -> \(path : Text) -> \(cmd_target : Size) ->
+let buildTestCmd : Size -> Command.Type = \(cmd_target : Size) ->
   let deb_version = DebianVersions.DebVersion.Bullseye
-  let key = "single-node-tests-${profile}" in
+  let key = "single-node-tests" in
   Command.build
     Command.Config::{
       commands = RunInToolchain.runInToolchain ["DUNE_INSTRUMENT_WITH=bisect_ppx", "COVERALLS_TOKEN"] "artifact-cache-helper.sh command_line_tests.exe && chmod +x command_line_tests.exe && buildkite/scripts/single-node-tests.sh && buildkite/scripts/upload-partial-coverage-data.sh ${key}",
-      label = "${profile} single-node-tests",
+      label = "single-node-tests",
       key = key,
       target = cmd_target,
       docker = None Docker.Type,
