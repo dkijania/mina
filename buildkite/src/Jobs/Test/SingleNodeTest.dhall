@@ -27,11 +27,15 @@ let JobSpec = ../../Pipeline/JobSpec.dhall
 let Command = ../../Command/Base.dhall
 let RunInToolchain = ../../Command/RunInToolchain.dhall
 let DebianVersions = ../../Constants/DebianVersions.dhall
+let Profiles = ../../Constants/Profiles.dhall
 let Docker = ../../Command/Docker/Type.dhall
 let Size = ../../Command/Size.dhall
 
+
+let dependsOn = DebianVersions.dependsOn DebianVersions.DebVersion.Bullseye Profiles.Type.Standard
+
+
 let buildTestCmd : Size -> Command.Type = \(cmd_target : Size) ->
-  let deb_version = DebianVersions.DebVersion.Bullseye
   let key = "single-node-tests" in
   Command.build
     Command.Config::{
@@ -40,7 +44,7 @@ let buildTestCmd : Size -> Command.Type = \(cmd_target : Size) ->
       key = key,
       target = cmd_target,
       docker = None Docker.Type,
-      depends_on = DebianVersions.dependsOn deb_version
+      depends_on = dependsOn 
     }
 
 in
