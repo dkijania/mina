@@ -35,7 +35,7 @@ let buildTestCmd : Size -> Command.Type = \(cmd_target : Size) ->
   let key = "single-node-tests" in
   Command.build
     Command.Config::{
-      commands = RunInToolchain.runInToolchain ["DUNE_INSTRUMENT_WITH=bisect_ppx", "COVERALLS_TOKEN"] "artifact-cache-helper.sh command_line_tests.exe && chmod +x command_line_tests.exe && buildkite/scripts/single-node-tests.sh && buildkite/scripts/upload-partial-coverage-data.sh ${key}",
+      commands = RunInToolchain.runInToolchain ["DUNE_INSTRUMENT_WITH=bisect_ppx", "COVERALLS_TOKEN"] "buildkite/scripts/single-node-tests.sh && buildkite/scripts/upload-partial-coverage-data.sh ${key}",
       label = "single-node-tests",
       key = key,
       target = cmd_target,

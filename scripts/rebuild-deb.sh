@@ -228,7 +228,7 @@ create_control_file mina-test-executive "${SHARED_DEPS}${TEST_EXECUTIVE_DEPS}" '
 
 # Binaries
 cp ./default/src/app/test_executive/test_executive.exe "${BUILDDIR}/usr/local/bin/mina-test-executive"
-
+cp ./default/src/test/command_line_tests/command_line_tests.exe "${BUILDDIR}/usr/local/bin/mina-command-line-tests"
 build_deb mina-test-executive
 
 ##################################### GENERATE BATCH TXN TOOL PACKAGE #######################################
