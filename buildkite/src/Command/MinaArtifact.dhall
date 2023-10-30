@@ -128,7 +128,7 @@ let pipeline : DebianVersions.DebVersion -> Profiles.Type ->  PipelineMode.Type 
 
         in
 
-        DockerImage.generateStep zkappTestTxnSpec,
+        DockerImage.generateStep zkappTestTxnSpec
 
       ]
 
