@@ -8,13 +8,7 @@ export DEBIAN_FRONTEND=noninteractive
 sudo apt-get update
 sudo apt-get install -y git apt-transport-https ca-certificates tzdata curl
 
-case "$BUILDKITE_PULL_REQUEST_BASE_BRANCH" in
-  rampup|berkeley|release/2.0.0|develop)
-    TESTNET_NAME="berkeley"
-  ;;
-  *)
-    TESTNET_NAME="mainnet"
-esac
+TESTNET_NAME="berkeley"
 
 git config --global --add safe.directory /workdir
 
