@@ -21,8 +21,7 @@ let proof_level = precomputed_values.proof_level
 
 let verifier =
   Async.Thread_safe.block_on_async_exn (fun () ->
-      Verifier.create ~logger ~proof_level ~constraint_constants
-        ~conf_dir:None
+      Verifier.create ~logger ~proof_level ~constraint_constants ~conf_dir:None
         ~pids:(Child_processes.Termination.create_pid_table ()) )
 
 module Genesis_ledger = (val precomputed_values.genesis_ledger)
@@ -47,24 +46,27 @@ let create_frontier () =
     Consensus.Data.Local_state.create Public_key.Compressed.Set.empty
       ~genesis_ledger:Genesis_ledger.t
       ~genesis_epoch_data:precomputed_values.genesis_epoch_data
-      ~epoch_ledger_location
-      ~ledger_depth:constraint_constants.ledger_depth
+      ~epoch_ledger_location ~ledger_depth:constraint_constants.ledger_depth
       ~genesis_state_hash:
-        (State_hash.With_state_hashes.state_hash precomputed_values.protocol_state_with_hashes)
+        (State_hash.With_state_hashes.state_hash
+           precomputed_values.protocol_state_with_hashes )
   in
   let root_ledger =
     Or_error.ok_exn
       (Transfer.transfer_accounts
          ~src:(Lazy.force Genesis_ledger.t)
-         ~dest:(Ledger.create ~depth:ledger_depth ()))
+         ~dest:(Ledger.create ~depth:ledger_depth ()) )
   in
   Protocol_version.(set_current zero) ;
   let root_data =
     let open Root_data in
-    { transition= External_transition.Validated.lift @@ Mina_block.Validated.lift @@ Mina_block.genesis ~precomputed_values
-    ; staged_ledger=
+    { transition =
+        External_transition.Validated.lift @@ Mina_block.Validated.lift
+        @@ Mina_block.genesis ~precomputed_values
+    ; staged_ledger =
         Staged_ledger.create_exn ~constraint_constants ~ledger:root_ledger
-    ; protocol_states= [] }
+    ; protocol_states = []
+    }
   in
   let persistent_root =
     Persistent_root.create ~logger
@@ -110,15 +112,11 @@ let f make_breadcrumb =
         Mina_block.Precomputed.of_block ~scheduled_time
           (Breadcrumb.block breadcrumb)
       in
-      Core_kernel.eprintf
-        !"Randomly generated block, sexp:\n" ;
-      Core_kernel.printf !"%{sexp:Mina_block.Precomputed.t}\n"
-        precomputed ;
-      Core_kernel.eprintf
-        !"Randomly generated block, json:\n" ;
+      Core_kernel.eprintf !"Randomly generated block, sexp:\n" ;
+      Core_kernel.printf !"%{sexp:Mina_block.Precomputed.t}\n" precomputed ;
+      Core_kernel.eprintf !"Randomly generated block, json:\n" ;
       Core_kernel.printf !"%{Yojson.Safe}\n"
         (Mina_block.Precomputed.to_yojson precomputed) ;
       clean_up_persistent_root ~frontier )
 
-let () =
-  Core_kernel.Quickcheck.test gen_breadcrumb ~trials:1 ~f
+let () = Core_kernel.Quickcheck.test gen_breadcrumb ~trials:1 ~f
