@@ -3,35 +3,16 @@
  (name dump_blocks)
  (public_name dump_blocks)
  (libraries
-   ;;opam libraries
-   core.uuid
-   core
-   async
-   async_kernel
-   core_kernel
-   ppx_inline_test.config
-   async_unix
-   core_kernel.uuid
-   sexplib0
    base
-   yojson
+   core async async_kernel async_unix core_kernel sexplib0 yojson
    ppx_inline_test.runner.lib
    transition_frontier_base transition_frontier_full_frontier
    logger precomputed_values block_time mina_base
    transition_frontier mina_state mina_block mina_wire_types
-   staged_ledger
-   with_hash
-   child_processes
-   genesis_constants
-   signature_lib
-   transition_frontier_persistent_root
-   inline_test_quiet_logs
-   verifier
-   coda_genesis_ledger
-   merkle_ledger
-   consensus
-   data_hash_lib
-   protocol_version
+   core.uuid core_kernel.uuid signature_lib 
+   staged_ledger with_hash child_processes genesis_constants
+   transition_frontier_persistent_root verifier coda_genesis_ledger
+   merkle_ledger consensus data_hash_lib protocol_version
  )
  (instrumentation (backend bisect_ppx))
  (preprocess (pps ppx_version ppx_let ppx_custom_printf))
