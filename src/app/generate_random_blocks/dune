@@ -1,7 +1,7 @@
 (executable
- (package dump_blocks)
- (name dump_blocks)
- (public_name dump_blocks)
+ (package generate_random_blocks)
+ (name generate_random_blocks)
+ (public_name generate_random_blocks)
  (libraries
    base
    core async async_kernel async_unix core_kernel sexplib0 yojson
