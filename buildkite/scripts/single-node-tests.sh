@@ -17,7 +17,7 @@ source buildkite/scripts/export-git-env-vars.sh
 echo "Installing mina daemon package: mina-${TESTNET_NAME}=${MINA_DEB_VERSION}"
 echo "deb [trusted=yes] http://packages.o1test.net $MINA_DEB_CODENAME $MINA_DEB_RELEASE" | sudo tee /etc/apt/sources.list.d/mina.list
 sudo apt-get update
-sudo apt-get install --allow-downgrades -y "mina-${TESTNET_NAME}=${MINA_DEB_VERSION}" "mina-command-line-tests=${MINA_DEB_VERSION}"
+sudo apt-get install --allow-downgrades -y "mina-${TESTNET_NAME}=${MINA_DEB_VERSION}" "mina-test-executive=${MINA_DEB_VERSION}"
 
 mkdir -p _build/default/src/app/cli/src
 sudo cp /usr/local/bin/mina _build/default/src/app/cli/src/mina.exe
