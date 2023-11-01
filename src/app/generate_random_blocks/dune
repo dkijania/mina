@@ -13,6 +13,7 @@
    staged_ledger with_hash child_processes genesis_constants
    transition_frontier_persistent_root verifier coda_genesis_ledger
    merkle_ledger consensus data_hash_lib protocol_version
+   coda_runtime_config genesis_ledger_helper.lib genesis_ledger_helper
  )
  (instrumentation (backend bisect_ppx))
  (preprocess (pps ppx_version ppx_let ppx_custom_printf))
