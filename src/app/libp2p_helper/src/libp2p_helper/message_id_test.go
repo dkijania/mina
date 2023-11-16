@@ -13,7 +13,7 @@ import (
 
 func testPubsubMsgIdFun(t *testing.T, topic string) {
 	newProtocol := "/mina/97"
-	var mask uint32 = upcallDropAllMask ^ (1 << IncomingStreamChan) ^ (1 << GossipReceivedChan)
+	var mask uint32 = upcallDropAllMask ^ (1 << IncomingStreamChan) ^ (1 << GossipReceivedChan) ^ (1 << StreamMessageReceivedChan)
 	errChan := make(chan error, 3)
 	ctx, ctxCancel := context.WithCancel(context.Background())
 	handleErrChan(t, errChan, ctxCancel)
@@ -40,7 +40,7 @@ func testPubsubMsgIdFun(t *testing.T, topic string) {
 
 	gossipSubp := pubsub.DefaultGossipSubParams()
 	gossipSubp.D = 4
-	gossipSubp.Dlo = 2
+	gossipSubp.Dlo = 3
 	gossipSubp.Dhi = 6
 	require.NoError(t, configurePubsub(alice, 100, nil, nil, pubsub.WithGossipSubParams(gossipSubp)))
 	require.NoError(t, configurePubsub(bob, 100, nil, nil, pubsub.WithGossipSubParams(gossipSubp)))
@@ -48,6 +48,10 @@ func testPubsubMsgIdFun(t *testing.T, topic string) {
 
 	// Subscribe to the topic
 	testSubscribeDo(t, alice, topic, 21, 58)
+	// Timeout between subscriptions is needed because otherwise each process would try to discover peers
+	// and will only find that no other peers are connected to the same topic.
+	// That said, pubsub's implementation is imperfect
+	time.Sleep(time.Millisecond * 100)
 	testSubscribeDo(t, bob, topic, 21, 58)
 	testSubscribeDo(t, carol, topic, 21, 58)
 
