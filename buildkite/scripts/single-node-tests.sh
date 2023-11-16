@@ -18,4 +18,7 @@ sudo apt-get update
 echo "Installing mina test suite package: mina-test-suite=${MINA_DEB_VERSION}"
 sudo apt-get install --allow-downgrades -y mina-test-suite=${MINA_DEB_VERSION} mina-berkeley=${MINA_DEB_VERSION}
 
-mina-command-line-tests --mina-path mina-daemon
+export MINA_LIBP2P_PASS="naughty blue worm"
+export MINA_PRIVKEY_PASS="naughty blue worm"
+
+mina-command-line-tests test --mina-path mina-daemon -v
