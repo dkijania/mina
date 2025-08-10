@@ -204,7 +204,182 @@ run_cmd_validated() {
     run_cmd "$cmd" "$@"
 }
 
+# =============================================================================
+# POLYMORPHIC MINA COMMAND EXECUTION INTERFACE
+# Supports both native executable and docker container execution
+# =============================================================================
+
+# Execution mode configuration
+# MINA_EXECUTION_MODE: "native" (default) or "docker"
+# MINA_EXE: Path to mina executable (for native mode)
+# MINA_DOCKER_CONTAINER: Container name/id (for docker mode)
+# MINA_DOCKER_IMAGE: Docker image (alternative to container for docker mode)
+# MINA_DOCKER_NETWORK: Docker network (optional, for docker mode)
+readonly MINA_EXECUTION_MODE="${MINA_EXECUTION_MODE:-native}"
+readonly MINA_EXE="${MINA_EXE:-mina}"
+
+# Validate execution configuration
+validate_mina_config() {
+    case "$MINA_EXECUTION_MODE" in
+        native)
+            if ! cmd_exists "$MINA_EXE"; then
+                log_error "Mina executable not available: $MINA_EXE"
+                return 1
+            fi
+            ;;
+        docker)
+            if ! cmd_exists "docker"; then
+                log_error "Docker not available for mina execution"
+                return 1
+            fi
+            if [[ -z "${MINA_DOCKER_CONTAINER:-}" ]] && [[ -z "${MINA_DOCKER_IMAGE:-}" ]]; then
+                log_error "Neither MINA_DOCKER_CONTAINER nor MINA_DOCKER_IMAGE specified for docker mode"
+                return 1
+            fi
+            ;;
+        *)
+            log_error "Invalid MINA_EXECUTION_MODE: $MINA_EXECUTION_MODE (must be 'native' or 'docker')"
+            return 1
+            ;;
+    esac
+    return 0
+}
+
+# Execute mina command with polymorphic dispatch
+_mina_exec() {
+    local cmd_type="$1"
+    shift
+    
+    if ! validate_mina_config; then
+        return 1
+    fi
+    
+    case "$MINA_EXECUTION_MODE" in
+        native)
+            log_debug "Executing mina $cmd_type via native executable: $MINA_EXE"
+            run_cmd "$MINA_EXE" "$@"
+            ;;
+        docker)
+            if [[ -n "${MINA_DOCKER_CONTAINER:-}" ]]; then
+                log_debug "Executing mina $cmd_type via docker container: $MINA_DOCKER_CONTAINER"
+                local docker_cmd=(docker exec)
+                
+                # Add interactive flag for daemon commands that might need input
+                if [[ "$cmd_type" == "daemon" ]]; then
+                    docker_cmd+=(-d)  # detached for daemon
+                else
+                    docker_cmd+=(-i)  # interactive for others
+                fi
+                
+                # Add network if specified
+                if [[ -n "${MINA_DOCKER_NETWORK:-}" ]]; then
+                    docker_cmd+=(--network "$MINA_DOCKER_NETWORK")
+                fi
+                
+                docker_cmd+=("$MINA_DOCKER_CONTAINER" mina "$@")
+                run_cmd "${docker_cmd[@]}"
+            else
+                log_debug "Executing mina $cmd_type via docker image: $MINA_DOCKER_IMAGE"
+                local docker_cmd=(docker run --rm)
+                
+                # Add interactive flag for non-daemon commands
+                if [[ "$cmd_type" != "daemon" ]]; then
+                    docker_cmd+=(-i)
+                fi
+                
+                # Add network if specified
+                if [[ -n "${MINA_DOCKER_NETWORK:-}" ]]; then
+                    docker_cmd+=(--network "$MINA_DOCKER_NETWORK")
+                fi
+                
+                # Mount current directory for file access
+                docker_cmd+=(-v "$PWD:$PWD" -w "$PWD")
+                
+                docker_cmd+=("$MINA_DOCKER_IMAGE" mina "$@")
+                run_cmd "${docker_cmd[@]}"
+            fi
+            ;;
+    esac
+}
+
+# Execute mina daemon commands (background processes)
+mina_daemon() {
+    log_debug "Executing mina daemon command: $*"
+    _mina_exec "daemon" daemon "$@"
+}
+
+# Execute mina daemon commands in background
+mina_daemon_background() {
+    log_debug "Executing mina daemon command in background: $*"
+    
+    case "$MINA_EXECUTION_MODE" in
+        native)
+            log_cmd "$MINA_EXE daemon $*"
+            "$MINA_EXE" daemon "$@" &
+            local pid=$!
+            log_debug "Daemon started in background with PID $pid: $MINA_EXE daemon $*"
+            echo "$pid"
+            ;;
+        docker)
+            if [[ -n "${MINA_DOCKER_CONTAINER:-}" ]]; then
+                log_cmd "docker exec -d $MINA_DOCKER_CONTAINER mina daemon $*"
+                docker exec -d "$MINA_DOCKER_CONTAINER" mina daemon "$@"
+                # For existing containers, we can't easily get PID, return container name
+                log_debug "Daemon started in background via container: $MINA_DOCKER_CONTAINER"
+                echo "$MINA_DOCKER_CONTAINER"
+            else
+                log_cmd "docker run --rm -d -v $PWD:$PWD -w $PWD ${MINA_DOCKER_NETWORK:+--network $MINA_DOCKER_NETWORK} $MINA_DOCKER_IMAGE mina daemon $*"
+                local container_id
+                container_id=$(docker run --rm -d \
+                    -v "$PWD:$PWD" -w "$PWD" \
+                    ${MINA_DOCKER_NETWORK:+--network "$MINA_DOCKER_NETWORK"} \
+                    "$MINA_DOCKER_IMAGE" mina daemon "$@")
+                log_debug "Daemon started in background via new container: $container_id"
+                echo "$container_id"
+            fi
+            ;;
+    esac
+}
+
+# Execute mina client commands
+mina_client() {
+    log_debug "Executing mina client command: $*"
+    _mina_exec "client" client "$@"
+}
+
+# Execute mina advanced commands
+mina_advanced() {
+    log_debug "Executing mina advanced command: $*"
+    _mina_exec "advanced" advanced "$@"
+}
+
+# Execute mina libp2p commands
+mina_libp2p() {
+    log_debug "Executing mina libp2p command: $*"
+    _mina_exec "libp2p" libp2p "$@"
+}
+
+# Execute mina accounts commands
+mina_accounts() {
+    log_debug "Executing mina accounts command: $*"
+    _mina_exec "accounts" accounts "$@"
+}
+
+# Execute mina ledger commands
+mina_ledger() {
+    log_debug "Executing mina ledger command: $*"
+    _mina_exec "ledger" ledger "$@"
+}
+
+# Execute general mina commands
+mina_cmd() {
+    log_debug "Executing general mina command: $*"
+    _mina_exec "general" "$@"
+}
+
 # Export functions for use in subshells
 export -f log_cmd run_cmd run_cmd_capture run_cmd_quiet run_cmd_timeout
 export -f run_cmd_background run_cmd_retry run_cmd_sequence run_cmd_parallel
 export -f cmd_exists run_cmd_validated
+export -f validate_mina_config _mina_exec mina_daemon mina_daemon_background
+export -f mina_client mina_advanced mina_libp2p mina_accounts mina_ledger mina_cmd
