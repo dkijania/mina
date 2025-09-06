@@ -723,6 +723,18 @@ hardfork-docker: ocaml_checks ## Generate hardfork packages
 	@./scripts/debian/aptly.sh stop
 
 ########################################
+# Meta targets for dockers
+
+.PHONY: all-docker-daemon
+all-docker-daemon-devnet: all build-logproc build-daemon-utils build-devnet-sigs debian-build-logproc debian-download-create-legacy-hardfork debian-build-daemon-devnet start-local-debian-repo docker-build-daemon-devnet stop-local-debian-repo
+
+.PHONY: all-archive
+all-archive: build-archive-devnet build-logproc build-archive-utils build-devnet-sigs debian-build-logproc debian-download-create-legacy-hardfork debian-build-daemon-devnet start-local-debian-repo docker-build-archive-devnet stop-local-debian-repo
+
+.PHONY: all-rosetta
+all-rosetta: build-rosetta-devnet build-logproc build-rosetta-utils build-devnet-sigs debian-build-logproc debian-download-create-legacy-hardfork debian-build-daemon-devnet start-local-debian-repo docker-build-rosetta-devnet stop-local-debian-repo
+
+########################################
 # Generate odoc documentation
 
 .PHONY: ml-docs
